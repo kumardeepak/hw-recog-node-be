@@ -1,0 +1,10 @@
+{
+    "local": {
+        "PORT": 9090,
+        "PASSPORTJS_SECRET": "ocr-DEV-123$",
+        "LOG_DIRECTORY": "./app_log/ocr-dev",
+        "MONGO_URL":"mongodb://localhost/textocr",
+        "ELASTIC_URL":"http://localhost:9200",
+        "KAFKA_URL":"172.17.18.200:9092"
+    }
+}
