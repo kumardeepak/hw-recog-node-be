@@ -20,7 +20,7 @@ exports.fetchStates = function (req, res) {
 }
 
 exports.updateStates = function(req, res){
-    if (!req.body || !req.body.State || !req.body.state.state_code) {
+    if (!req.body || !req.body.state || !req.body.state.state_code) {
         let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_MISSING_PARAMETERS, COMPONENT).getRspStatus()
         return res.status(apistatus.http.status).json(apistatus);
     }
