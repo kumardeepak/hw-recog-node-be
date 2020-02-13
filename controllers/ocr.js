@@ -54,7 +54,7 @@ exports.checkOcr = function (req, res) {
     BaseModel.findByCondition(Student, { student_code: data.student_code, status: STATUS_ACTIVE}, function (err, students) {
         if (err || !students || students.length == 0) {
             let apistatus = new APIStatus(StatusCode.ERR_WRONG_STUDENT_CODE, COMPONENT).getRspStatus()
-            return res.status(apistatus.http.status).json(apistatus);
+            return res.status(200).json(apistatus);
         }
         let student = students[0]._doc
         BaseModel.findByCondition(Ocr, { exam_code: data.exam_code, status: STATUS_ACTIVE }, function (err, ocrdb) {
