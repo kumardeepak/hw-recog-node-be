@@ -1,4 +1,4 @@
-var Teacher = require('../models/Teacher');
+var Teacher = require('../models/teacher');
 var BaseModel = require('../models/basemodel');
 var School = require('../models/school');
 var Response = require('../models/response')
