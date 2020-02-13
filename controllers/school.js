@@ -6,11 +6,11 @@ var StatusCode = require('../errors/statuscodes').StatusCode
 var LOG = require('../logger/logger').logger
 
 var COMPONENT = "school";
-const STAUS_ACTIVE = 'ACTIVE'
+const STATUS_ACTIVE = 'ACTIVE'
 
 exports.fetchSchools = function (req, res) {
     let cluster = req.query.cluster
-    let condition = { status: STAUS_ACTIVE }
+    let condition = { status: STATUS_ACTIVE }
     if (cluster) {
         condition['cluster_code'] = cluster
     }
@@ -52,12 +52,12 @@ exports.saveSchools = function (req, res) {
             let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_CLUSTER_NOTFOUND, COMPONENT).getRspStatus()
             return res.status(apistatus.http.status).json(apistatus);
         }
-        School.findByCondition({ school_code: school.school_code, status: STAUS_ACTIVE }, function (err, schooldb) {
+        School.findByCondition({ school_code: school.school_code, status: STATUS_ACTIVE }, function (err, schooldb) {
             if (schooldb && schooldb.length > 0) {
                 let apistatus = new APIStatus(StatusCode.ERR_DATA_EXIST, COMPONENT).getRspStatus()
                 return res.status(apistatus.http.status).json(apistatus);
             }
-            school.status = STAUS_ACTIVE
+            school.status = STATUS_ACTIVE
             school.created_on = new Date()
             School.saveSchools([school], function (err, doc) {
                 if (err) {

@@ -6,11 +6,11 @@ var StatusCode = require('../errors/statuscodes').StatusCode
 var LOG = require('../logger/logger').logger
 
 var COMPONENT = "district";
-const STAUS_ACTIVE = 'ACTIVE'
+const STATUS_ACTIVE = 'ACTIVE'
 
 exports.fetchDistricts = function (req, res) {
     let state = req.query.state
-    let condition = { status: STAUS_ACTIVE }
+    let condition = { status: STATUS_ACTIVE }
     if (state) {
         condition['state_code'] = state
     }
@@ -52,12 +52,12 @@ exports.saveDistricts = function (req, res) {
             let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_STATE_NOTFOUND, COMPONENT).getRspStatus()
             return res.status(apistatus.http.status).json(apistatus);
         }
-        District.findByCondition({ district_code: district.district_code, status: STAUS_ACTIVE }, function (err, districtdb) {
+        District.findByCondition({ district_code: district.district_code, status: STATUS_ACTIVE }, function (err, districtdb) {
             if (districtdb && districtdb.length > 0) {
                 let apistatus = new APIStatus(StatusCode.ERR_DATA_EXIST, COMPONENT).getRspStatus()
                 return res.status(apistatus.http.status).json(apistatus);
             }
-            district.status = STAUS_ACTIVE
+            district.status = STATUS_ACTIVE
             district.created_on = new Date()
             District.saveDistricts([district], function (err, doc) {
                 if (err) {

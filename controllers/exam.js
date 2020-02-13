@@ -7,12 +7,12 @@ var StatusCode = require('../errors/statuscodes').StatusCode
 var LOG = require('../logger/logger').logger
 
 var COMPONENT = "exam";
-const STAUS_ACTIVE = 'ACTIVE'
+const STATUS_ACTIVE = 'ACTIVE'
 
 exports.fetchExams = function (req, res) {
     let school = req.query.school
     let exam_date = req.query.exam_date
-    let condition = { status: STAUS_ACTIVE }
+    let condition = { status: STATUS_ACTIVE }
     if (school) {
         condition['school_code'] = school
     }
@@ -58,12 +58,12 @@ exports.saveExams = function (req, res) {
             let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SCHOOL_NOTFOUND, COMPONENT).getRspStatus()
             return res.status(apistatus.http.status).json(apistatus);
         }
-        BaseModel.findByCondition(Exam, { exam_code: exam.exam_code, status: STAUS_ACTIVE }, function (err, examdb) {
+        BaseModel.findByCondition(Exam, { exam_code: exam.exam_code, status: STATUS_ACTIVE }, function (err, examdb) {
             if (examdb && examdb.length > 0) {
                 let apistatus = new APIStatus(StatusCode.ERR_DATA_EXIST, COMPONENT).getRspStatus()
                 return res.status(apistatus.http.status).json(apistatus);
             }
-            exam.status = STAUS_ACTIVE
+            exam.status = STATUS_ACTIVE
             exam.created_on = new Date()
             BaseModel.saveData(Exam, [exam], function (err, doc) {
                 if (err) {

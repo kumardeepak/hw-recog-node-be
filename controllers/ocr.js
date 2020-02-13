@@ -8,12 +8,12 @@ var StatusCode = require('../errors/statuscodes').StatusCode
 var LOG = require('../logger/logger').logger
 
 var COMPONENT = "ocr";
-const STAUS_ACTIVE = 'ACTIVE'
+const STATUS_ACTIVE = 'ACTIVE'
 const MARKS_RECEIVED_KEY = 'Marks received'
 
 exports.fetchOcrs = function (req, res) {
     let exam = req.query.exam
-    let condition = { status: STAUS_ACTIVE }
+    let condition = { status: STATUS_ACTIVE }
     if (exam) {
         condition['exam_code'] = exam
     }
@@ -51,13 +51,13 @@ exports.checkOcr = function (req, res) {
         return res.status(apistatus.http.status).json(apistatus);
     }
     let data = req.body
-    BaseModel.findByCondition(Student, { student_code: data.student_code, statue: STAUS_ACTIVE }, function (err, students) {
+    BaseModel.findByCondition(Student, { student_code: data.student_code, status: STATUS_ACTIVE}, function (err, students) {
         if (err || !students || students.length == 0) {
             let apistatus = new APIStatus(StatusCode.ERR_WRONG_STUDENT_CODE, COMPONENT).getRspStatus()
             return res.status(apistatus.http.status).json(apistatus);
         }
         let student = students[0]._doc
-        BaseModel.findByCondition(Ocr, { exam_code: data.exam_code, status: STAUS_ACTIVE }, function (err, ocrdb) {
+        BaseModel.findByCondition(Ocr, { exam_code: data.exam_code, status: STATUS_ACTIVE }, function (err, ocrdb) {
             if (err || !ocrdb || ocrdb.length == 0) {
                 let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_DATA_NOTFOUND, COMPONENT).getRspStatus()
                 return res.status(apistatus.http.status).json(apistatus);
@@ -97,12 +97,12 @@ exports.saveOcrs = function (req, res) {
             let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_EXAM_NOTFOUND, COMPONENT).getRspStatus()
             return res.status(apistatus.http.status).json(apistatus);
         }
-        BaseModel.findByCondition(Ocr, { exam_code: ocr.exam_code, status: STAUS_ACTIVE }, function (err, ocrdb) {
+        BaseModel.findByCondition(Ocr, { exam_code: ocr.exam_code, status: STATUS_ACTIVE }, function (err, ocrdb) {
             if (ocrdb && ocrdb.length > 0) {
                 let apistatus = new APIStatus(StatusCode.ERR_DATA_EXIST, COMPONENT).getRspStatus()
                 return res.status(apistatus.http.status).json(apistatus);
             }
-            ocr.status = STAUS_ACTIVE
+            ocr.status = STATUS_ACTIVE
             ocr.created_on = new Date()
             BaseModel.saveData(Ocr, [ocr], function (err, doc) {
                 if (err) {

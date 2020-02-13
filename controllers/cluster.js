@@ -6,11 +6,11 @@ var StatusCode = require('../errors/statuscodes').StatusCode
 var LOG = require('../logger/logger').logger
 
 var COMPONENT = "cluster";
-const STAUS_ACTIVE = 'ACTIVE'
+const STATUS_ACTIVE = 'ACTIVE'
 
 exports.fetchClusters = function (req, res) {
     let block = req.query.block
-    let condition = { status: STAUS_ACTIVE }
+    let condition = { status: STATUS_ACTIVE }
     if (block) {
         condition['block_code'] = block
     }
@@ -52,12 +52,12 @@ exports.saveClusters = function (req, res) {
             let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_BLOCK_NOTFOUND, COMPONENT).getRspStatus()
             return res.status(apistatus.http.status).json(apistatus);
         }
-        Cluster.findByCondition({ cluster_code: cluster.cluster_code, status: STAUS_ACTIVE }, function (err, clusterdb) {
+        Cluster.findByCondition({ cluster_code: cluster.cluster_code, status: STATUS_ACTIVE }, function (err, clusterdb) {
             if (clusterdb && clusterdb.length > 0) {
                 let apistatus = new APIStatus(StatusCode.ERR_DATA_EXIST, COMPONENT).getRspStatus()
                 return res.status(apistatus.http.status).json(apistatus);
             }
-            cluster.status = STAUS_ACTIVE
+            cluster.status = STATUS_ACTIVE
             cluster.created_on = new Date()
             Cluster.saveClusters([cluster], function (err, doc) {
                 if (err) {

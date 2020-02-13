@@ -7,11 +7,11 @@ var StatusCode = require('../errors/statuscodes').StatusCode
 var LOG = require('../logger/logger').logger
 
 var COMPONENT = "teacher";
-const STAUS_ACTIVE = 'ACTIVE'
+const STATUS_ACTIVE = 'ACTIVE'
 
 exports.fetchTeachers = function (req, res) {
     let school = req.query.school
-    let condition = { status: STAUS_ACTIVE }
+    let condition = { status: STATUS_ACTIVE }
     if (school) {
         condition['school_code'] = school
     }
@@ -54,12 +54,12 @@ exports.saveTeachers = function (req, res) {
             let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SCHOOL_NOTFOUND, COMPONENT).getRspStatus()
             return res.status(apistatus.http.status).json(apistatus);
         }
-        BaseModel.findByCondition(Teacher, { teacher_code: teacher.teacher_code, status: STAUS_ACTIVE }, function (err, teacherdb) {
+        BaseModel.findByCondition(Teacher, { teacher_code: teacher.teacher_code, status: STATUS_ACTIVE }, function (err, teacherdb) {
             if (teacherdb && teacherdb.length > 0) {
                 let apistatus = new APIStatus(StatusCode.ERR_DATA_EXIST, COMPONENT).getRspStatus()
                 return res.status(apistatus.http.status).json(apistatus);
             }
-            teacher.status = STAUS_ACTIVE
+            teacher.status = STATUS_ACTIVE
             teacher.created_on = new Date()
             BaseModel.saveData(Teacher, [teacher], function (err, doc) {
                 if (err) {
