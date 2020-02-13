@@ -6,11 +6,11 @@ var StatusCode = require('../errors/statuscodes').StatusCode
 var LOG = require('../logger/logger').logger
 
 var COMPONENT = "block";
-const SATUS_ACTIVE = 'ACTIVE'
+const STAUS_ACTIVE = 'ACTIVE'
 
 exports.fetchBlocks = function (req, res) {
     let district = req.query.district
-    let condition = { status: SATUS_ACTIVE }
+    let condition = { status: STAUS_ACTIVE }
     if (district) {
         condition['district_code'] = district
     }
@@ -52,12 +52,12 @@ exports.saveBlocks = function (req, res) {
             let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_DISTRICT_NOTFOUND, COMPONENT).getRspStatus()
             return res.status(apistatus.http.status).json(apistatus);
         }
-        Block.findByCondition({ block_code: block.block_code, status: SATUS_ACTIVE }, function (err, blockdb) {
+        Block.findByCondition({ block_code: block.block_code, status: STAUS_ACTIVE }, function (err, blockdb) {
             if (blockdb && blockdb.length > 0) {
                 let apistatus = new APIStatus(StatusCode.ERR_DATA_EXIST, COMPONENT).getRspStatus()
                 return res.status(apistatus.http.status).json(apistatus);
             }
-            block.status = SATUS_ACTIVE
+            block.status = STAUS_ACTIVE
             block.created_on = new Date()
             Block.saveBlocks([block], function (err, doc) {
                 if (err) {

@@ -22,6 +22,7 @@ exports.StatusCode = {
     SUCCESS: { ok: true, http: { status: 200 }, why: "request successful" },
     ERR_GLOBAL_SYSTEM: { ok: false, http: { status: 500 }, why: "Internal Server Error" },
     ERR_GLOBAL_MISSING_PARAMETERS: { ok: false, http: { status: 400 }, why: "required data missing" },
+    ERR_WRONG_STUDENT_CODE: { ok: false, http: { status: 501 }, why: "WRONG_STUDENT_ID" },
     ERR_GLOBAL_MAX_LIMIT_EXCEEDED: { ok: false, http: { status: 400 }, why: "max limit exceeded" },
     ERR_GLOBAL_INVALID_PARAMETERS: { ok: false, http: { status: 400 }, why: "invalid params passed" },
     ERR_DATA_EXIST: { ok: false, http: { status: 400 }, why: "requested data already exist" },

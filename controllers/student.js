@@ -1,37 +1,39 @@
+var Student = require('../models/student');
+var BaseModel = require('../models/basemodel');
 var School = require('../models/school');
-var Cluster = require('../models/cluster');
 var Response = require('../models/response')
 var APIStatus = require('../errors/apistatus')
 var StatusCode = require('../errors/statuscodes').StatusCode
 var LOG = require('../logger/logger').logger
 
-var COMPONENT = "school";
+var COMPONENT = "student";
 const STAUS_ACTIVE = 'ACTIVE'
 
-exports.fetchSchools = function (req, res) {
-    let cluster = req.query.cluster
+exports.fetchStudents = function (req, res) {
+    let school = req.query.school
     let condition = { status: STAUS_ACTIVE }
-    if (cluster) {
-        condition['cluster_code'] = cluster
+    if (school) {
+        condition['school_code'] = school
     }
-    School.findByCondition(condition, function (err, schools) {
+    BaseModel.findByCondition(Student, condition, function (err, students) {
         if (err) {
             let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SYSTEM, COMPONENT).getRspStatus()
             return res.status(apistatus.http.status).json(apistatus);
         }
-        let response = new Response(StatusCode.SUCCESS, schools).getRsp()
+        let response = new Response(StatusCode.SUCCESS, students).getRsp()
         return res.status(response.http.status).json(response);
     })
 
 }
 
-exports.updateSchools = function (req, res) {
-    if (!req.body || !req.body.school || !req.body.school.school_code) {
+exports.updateStudents = function (req, res) {
+    if (!req.body || !req.body.student || !req.body.student.student_code) {
         let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_MISSING_PARAMETERS, COMPONENT).getRspStatus()
         return res.status(apistatus.http.status).json(apistatus);
     }
-    let school = req.body.school
-    School.updateSchool(school, function (err, doc) {
+    let student = req.body.student
+    let student_obj_update = {student_code: student.student_code, student_name: student.student_name, statue: student.status}
+    BaseModel.updateData(Student, student_obj_update, student._id, function (err, doc) {
         if (err) {
             let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SYSTEM, COMPONENT).getRspStatus()
             return res.status(apistatus.http.status).json(apistatus);
@@ -41,25 +43,25 @@ exports.updateSchools = function (req, res) {
     })
 }
 
-exports.saveSchools = function (req, res) {
-    if (!req.body || !req.body.school || !req.body.school.school_code || !req.body.school.school_name || !req.body.school.cluster_code) {
+exports.saveStudents = function (req, res) {
+    if (!req.body || !req.body.student || !req.body.student.student_code || !req.body.student.student_name || !req.body.student.school_code) {
         let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_MISSING_PARAMETERS, COMPONENT).getRspStatus()
         return res.status(apistatus.http.status).json(apistatus);
     }
-    let school = req.body.school
-    Cluster.findByCondition({ cluster_code: school.cluster_code }, function (err, clusters) {
-        if (err || !clusters && clusters.length == 0) {
-            let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_CLUSTER_NOTFOUND, COMPONENT).getRspStatus()
+    let student = req.body.student
+    BaseModel.findByCondition(School, { school_code: student.school_code }, function (err, schools) {
+        if (err || !schools && schools.length == 0) {
+            let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SCHOOL_NOTFOUND, COMPONENT).getRspStatus()
             return res.status(apistatus.http.status).json(apistatus);
         }
-        School.findByCondition({ school_code: school.school_code, status: STAUS_ACTIVE }, function (err, schooldb) {
-            if (schooldb && schooldb.length > 0) {
+        BaseModel.findByCondition(Student, { student_code: student.student_code, status: STAUS_ACTIVE }, function (err, studentdb) {
+            if (studentdb && studentdb.length > 0) {
                 let apistatus = new APIStatus(StatusCode.ERR_DATA_EXIST, COMPONENT).getRspStatus()
                 return res.status(apistatus.http.status).json(apistatus);
             }
-            school.status = STAUS_ACTIVE
-            school.created_on = new Date()
-            School.saveSchools([school], function (err, doc) {
+            student.status = STAUS_ACTIVE
+            student.created_on = new Date()
+            BaseModel.saveData(Student, [student], function (err, doc) {
                 if (err) {
                     let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SYSTEM, COMPONENT).getRspStatus()
                     return res.status(apistatus.http.status).json(apistatus);
