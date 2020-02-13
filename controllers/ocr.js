@@ -62,7 +62,9 @@ exports.checkOcr = function (req, res) {
                     res_data.data.push(t)
                 }
             })
-            let response = new Response(StatusCode.SUCCESS, res_data).getRsp()
+            table.data = res_data.data
+            data.ocr_data.response[data.ocr_data.response.length > 1 ? 1 : 0] = table
+            let response = new Response(StatusCode.SUCCESS, data).getRsp()
             return res.status(response.http.status).json(response);
         }
     })
