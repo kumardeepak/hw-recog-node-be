@@ -19,7 +19,7 @@ Block.saveBlocks = function(blocks, cb){
     })
 }
 
-Block.updateBlock = function (Block, cb) {
+Block.updateBlock = function (block, cb) {
     Block.collection.findOneAndUpdate({ _id: mongoose.Types.ObjectId(block._id)}, { $set: { block_code: block.block_code, block_name: block.block_name,status: block.status} }, { upsert: false }, function (err, doc) {
         if (err) {
             LOG.error(err)

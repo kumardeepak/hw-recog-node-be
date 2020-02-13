@@ -51,6 +51,7 @@ function startApp() {
   require('./routes/block/block.route')(router);
   require('./routes/district/district.route')(router);
   require('./routes/states/state.route')(router);
+  require('./routes/teacher/teacher.route')(router);
 
 
   app.use('/text-ocr/v1', router);

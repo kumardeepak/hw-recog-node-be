@@ -31,6 +31,7 @@ exports.StatusCode = {
     ERR_GLOBAL_LANG_NOTFOUND: { ok: false, http: { status: 404 }, why: "requested language doesn't exist" },
     ERR_GLOBAL_STATE_NOTFOUND: { ok: false, http: { status: 400 }, why: "requested state doesn't exist" },
     ERR_GLOBAL_DISTRICT_NOTFOUND: { ok: false, http: { status: 400 }, why: "requested district doesn't exist" },
+    ERR_GLOBAL_SCHOOL_NOTFOUND: { ok: false, http: { status: 400 }, why: "requested school doesn't exist" },
     ERR_GLOBAL_BLOCK_NOTFOUND: { ok: false, http: { status: 400 }, why: "requested block doesn't exist" },
     ERR_GLOBAL_CLUSTER_NOTFOUND: { ok: false, http: { status: 400 }, why: "requested cluster doesn't exist" },
     ERR_ALREADY_PROCESSED: { ok: false, http: { status: 501 }, why: "requested data already processed" },
