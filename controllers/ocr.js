@@ -9,6 +9,7 @@ var LOG = require('../logger/logger').logger
 
 var COMPONENT = "ocr";
 const STAUS_ACTIVE = 'ACTIVE'
+const MARKS_RECEIVED_KEY = 'Marks received'
 
 exports.fetchOcrs = function (req, res) {
     let exam = req.query.exam
@@ -62,7 +63,13 @@ exports.checkOcr = function (req, res) {
                 return res.status(apistatus.http.status).json(apistatus);
             } else {
                 let res_data = ocrdb[0]._doc
-                let table = data.ocr_data.response[data.ocr_data.response.length > 1 ? 1 : 0]
+                let table_index = 0
+                data.ocr_data.response.map((res, index)=>{
+                    if(res.header.title === MARKS_RECEIVED_KEY){
+                        table_index = index
+                    }
+                })
+                let table = data.ocr_data.response[table_index]
                 table.data.map((t) => {
                     if (t.col == 1) {
                         t.col = 3
@@ -71,7 +78,7 @@ exports.checkOcr = function (req, res) {
                 })
                 table.data = res_data.data
                 data.student_name = student.student_name
-                data.ocr_data.response[data.ocr_data.response.length > 1 ? 1 : 0] = table
+                data.ocr_data.response[table_index] = table
                 let response = new Response(StatusCode.SUCCESS, data).getRsp()
                 return res.status(response.http.status).json(response);
             }
