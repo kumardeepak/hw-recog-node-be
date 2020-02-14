@@ -1,4 +1,5 @@
 var LOG = require('../logger/logger').logger
+var mongoose = require("../db/mongoose");
 
 var Basemodel = {}
 
