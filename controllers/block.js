@@ -31,7 +31,7 @@ exports.updateBlocks = function (req, res) {
         return res.status(apistatus.http.status).json(apistatus);
     }
     let block = req.body.block
-    block.updateBlock(block, function (err, doc) {
+    Block.updateBlock(block, function (err, doc) {
         if (err) {
             let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SYSTEM, COMPONENT).getRspStatus()
             return res.status(apistatus.http.status).json(apistatus);
