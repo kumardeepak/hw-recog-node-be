@@ -15,7 +15,7 @@ Basemodel.saveData = function (schema, data, cb) {
 }
 
 Basemodel.updateData = function (schema, data, id, cb) {
-    schema.collection.findOneAndUpdate({ _id: mongoose.Types.ObjectId(id) }, { $set: { data } }, { upsert: false }, function (err, doc) {
+    schema.collection.findOneAndUpdate({ _id: mongoose.Types.ObjectId(id) }, { $set: data }, { upsert: false }, function (err, doc) {
         if (err) {
             LOG.error(err)
             cb(err, null)
