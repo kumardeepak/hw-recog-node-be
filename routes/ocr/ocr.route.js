@@ -11,11 +11,17 @@ module.exports = function (router) {
     router.route('/fetch-ocrs')
         .get(ocrController.fetchOcrs);
 
+    router.route('/download-report')
+        .get(ocrController.downloadReport);
+
     router.route('/update-ocr')
         .post(ocrController.updateOcrs);
 
     router.route('/save-ocr-masterdata')
         .post(ocrController.saveOcrs);
+
+    router.route('/save-ocr-data')
+        .post(ocrController.saveOcrData);
 
     router.route('/check-ocr')
         .post(ocrController.checkOcr);

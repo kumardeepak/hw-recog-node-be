@@ -1,4 +1,5 @@
 var Ocr = require('../models/ocr');
+var OcrData = require('../models/ocr_data');
 var Student = require('../models/student');
 var BaseModel = require('../models/basemodel');
 var Exam = require('../models/exam');
@@ -13,6 +14,28 @@ const MARKS_RECEIVED_KEY = 'Marks received'
 
 exports.fetchOcrs = function (req, res) {
     let exam = req.query.exam
+    let condition = { status: STATUS_ACTIVE }
+    if (exam) {
+        condition['exam_code'] = exam
+    }
+    BaseModel.findByCondition(Ocr, condition, function (err, ocrs) {
+        if (err) {
+            let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SYSTEM, COMPONENT).getRspStatus()
+            return res.status(apistatus.http.status).json(apistatus);
+        }
+        let response = new Response(StatusCode.SUCCESS, ocrs).getRsp()
+        return res.status(response.http.status).json(response);
+    })
+
+}
+
+exports.downloadReport = function (req, res) {
+    let date = req.query.date
+    var dateformat = /^(0?[1-9]|[12][0-9]|3[01])[\/\-](0?[1-9]|1[012])[\/\-]\d{4}$/;
+    if (!date || !date.match(dateformat)) {
+        let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SYSTEM, COMPONENT).getRspStatus()
+        return res.status(apistatus.http.status).json(apistatus);
+    }
     let condition = { status: STATUS_ACTIVE }
     if (exam) {
         condition['exam_code'] = exam
@@ -51,7 +74,7 @@ exports.checkOcr = function (req, res) {
         return res.status(apistatus.http.status).json(apistatus);
     }
     let data = req.body
-    BaseModel.findByCondition(Student, { student_code: data.student_code, status: STATUS_ACTIVE}, function (err, students) {
+    BaseModel.findByCondition(Student, { student_code: data.student_code, status: STATUS_ACTIVE }, function (err, students) {
         if (err || !students || students.length == 0) {
             let apistatus = new APIStatus(StatusCode.ERR_WRONG_STUDENT_CODE, COMPONENT).getRspStatus()
             return res.status(200).json(apistatus);
@@ -64,8 +87,8 @@ exports.checkOcr = function (req, res) {
             } else {
                 let res_data = ocrdb[0]._doc
                 let table_index = 0
-                data.ocr_data.response.map((res, index)=>{
-                    if(res.header.title === MARKS_RECEIVED_KEY){
+                data.ocr_data.response.map((res, index) => {
+                    if (res.header.title === MARKS_RECEIVED_KEY) {
                         table_index = index
                     }
                 })
@@ -113,5 +136,22 @@ exports.saveOcrs = function (req, res) {
                 return res.status(response.http.status).json(response);
             })
         })
+    })
+}
+
+exports.saveOcrData = function (req, res) {
+    if (!req.body || !req.body.exam_date || !req.body.exam_code || !req.body.student_code || !req.body.teacher_code || !req.body.ocr_data) {
+        let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_MISSING_PARAMETERS, COMPONENT).getRspStatus()
+        return res.status(apistatus.http.status).json(apistatus);
+    }
+    let ocr = req.body
+    ocr.created_on = new Date()
+    BaseModel.saveData(OcrData, [ocr], function (err, doc) {
+        if (err) {
+            let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SYSTEM, COMPONENT).getRspStatus()
+            return res.status(apistatus.http.status).json(apistatus);
+        }
+        let response = new Response(StatusCode.SUCCESS, COMPONENT).getRsp()
+        return res.status(response.http.status).json(response);
     })
 }
