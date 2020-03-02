@@ -96,7 +96,7 @@ exports.downloadReport = function (req, res) {
                         }
                     }
                 }
-                header.header.push(ocr._doc.student_code)
+                header.header.push('Marks Obtained By '+ocr._doc.student_code)
                 ocr._doc.ocr_data_map = ocr_data_map
                 return ocr
             })
