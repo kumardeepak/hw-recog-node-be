@@ -80,7 +80,7 @@ exports.downloadReport = function (req, res) {
                         ocr_data_map[data.row + '' + data.col] = data.text
                     }
                 })
-                for (var i = 1; i < max_row; i++) {
+                for (var i = 1; i <= max_row; i++) {
                     if (index == 0) {
                         let record = []
                         record.push(ocr_data_map[i + '' + 0])
