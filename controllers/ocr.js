@@ -52,7 +52,7 @@ exports.downloadReport = function (req, res) {
         let timestamp = new Date().getTime()
         let path = 'upload/' + timestamp + '.csv'
         BaseModel.findByCondition(OcrData, ocr_condition, function (err, ocrs) {
-            if (err) {
+            if (err || !ocrs) {
                 let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_NOTFOUND, COMPONENT).getRspStatus()
                 return res.status(apistatus.http.status).json(apistatus);
             }
