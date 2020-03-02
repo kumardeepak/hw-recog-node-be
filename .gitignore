@@ -7,6 +7,8 @@
 yarn.lock
 /nginx
 /app_log
+/upload/*
+!/upload/.gitkeep
 **__pycache__
 **.vscode
 

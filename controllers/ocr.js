@@ -1,4 +1,5 @@
 var Ocr = require('../models/ocr');
+var User = require('../models/user');
 var OcrData = require('../models/ocr_data');
 var Student = require('../models/student');
 var BaseModel = require('../models/basemodel');
@@ -6,6 +7,8 @@ var Exam = require('../models/exam');
 var Response = require('../models/response')
 var APIStatus = require('../errors/apistatus')
 var StatusCode = require('../errors/statuscodes').StatusCode
+const createCsvStringifier = require('csv-writer').createObjectCsvStringifier;
+
 var LOG = require('../logger/logger').logger
 
 var COMPONENT = "ocr";
@@ -31,22 +34,35 @@ exports.fetchOcrs = function (req, res) {
 
 exports.downloadReport = function (req, res) {
     let date = req.query.date
-    var dateformat = /^(0?[1-9]|[12][0-9]|3[01])[\/\-](0?[1-9]|1[012])[\/\-]\d{4}$/;
-    if (!date || !date.match(dateformat)) {
-        let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SYSTEM, COMPONENT).getRspStatus()
+    let teacher = req.query.teacher
+    if (!teacher) {
+        let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_MISSING_PARAMETERS, COMPONENT).getRspStatus()
         return res.status(apistatus.http.status).json(apistatus);
     }
-    let condition = { status: STATUS_ACTIVE }
-    if (exam) {
-        condition['exam_code'] = exam
-    }
-    BaseModel.findByCondition(Ocr, condition, function (err, ocrs) {
-        if (err) {
-            let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SYSTEM, COMPONENT).getRspStatus()
+    let condition = { username: teacher }
+    BaseModel.findByCondition(User, condition, function (err, users) {
+        if (err || !users) {
+            let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_NOTFOUND, COMPONENT).getRspStatus()
             return res.status(apistatus.http.status).json(apistatus);
         }
-        let response = new Response(StatusCode.SUCCESS, ocrs).getRsp()
-        return res.status(response.http.status).json(response);
+        let user_obj = users[0]._doc
+        let ocr_condition = { teacher_code: user_obj.teacher_code }
+        if (date) {
+            ocr_condition['exam_date'] = date
+        }
+        BaseModel.findByCondition(OcrData, ocr_condition, function (err, ocrs) {
+            if (err) {
+                let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_NOTFOUND, COMPONENT).getRspStatus()
+                return res.status(apistatus.http.status).json(apistatus);
+            }
+            let timestamp = new Date().getTime()
+            const csvWriter = createCsvWriter({
+                header: ['NAME', 'LANGUAGE'],
+                path: 'upload/' + timestamp + '.csv'
+            });
+            let response = new Response(StatusCode.SUCCESS, ocrs).getRsp()
+            return res.status(response.http.status).json(response);
+        })
     })
 
 }
@@ -69,7 +85,7 @@ exports.updateOcrs = function (req, res) {
 }
 
 exports.checkOcr = function (req, res) {
-    if (!req.body || !req.body.ocr_data || !req.body.exam_code) {
+    if (!req.body || !req.body.ocr_data || !req.body.exam_code || !req.body.student_code) {
         let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_MISSING_PARAMETERS, COMPONENT).getRspStatus()
         return res.status(apistatus.http.status).json(apistatus);
     }

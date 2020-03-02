@@ -20,7 +20,7 @@ async.each(arr, function (d, callback) {
         }
     }
     req.student.student_name = "STU" + d
-    req.student.student_code = "24050100201201" + d
+    req.student.student_code = "201" + d
     axios
         .post('http://52.11.90.50/app/v1/save-student', req)
         .then(res => {
