@@ -7,8 +7,7 @@ var Exam = require('../models/exam');
 var Response = require('../models/response')
 var APIStatus = require('../errors/apistatus')
 var StatusCode = require('../errors/statuscodes').StatusCode
-const createCsvStringifier = require('csv-writer').createObjectCsvStringifier;
-
+const createCsvWriter = require('csv-writer').createArrayCsvWriter;
 var LOG = require('../logger/logger').logger
 
 var COMPONENT = "ocr";
@@ -50,18 +49,68 @@ exports.downloadReport = function (req, res) {
         if (date) {
             ocr_condition['exam_date'] = date
         }
+        let timestamp = new Date().getTime()
+        let path = 'upload/' + timestamp + '.csv'
         BaseModel.findByCondition(OcrData, ocr_condition, function (err, ocrs) {
             if (err) {
                 let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_NOTFOUND, COMPONENT).getRspStatus()
                 return res.status(apistatus.http.status).json(apistatus);
             }
-            let timestamp = new Date().getTime()
-            const csvWriter = createCsvWriter({
-                header: ['NAME', 'LANGUAGE'],
-                path: 'upload/' + timestamp + '.csv'
-            });
-            let response = new Response(StatusCode.SUCCESS, ocrs).getRsp()
-            return res.status(response.http.status).json(response);
+            
+            let header = {
+                header: ['Sr.No.', 'Code', 'MaxMarks'],
+                path: path
+            }
+            let records = []
+
+            ocrs.map((ocr, index) => {
+                let record_ocr_index = 0
+                let ocr_data = ocr._doc.ocr_data.response
+                if (ocr_data[1].data.length > ocr_data[0].data.length) {
+                    record_ocr_index = 1
+                }
+
+                let ocr_data_map = {}
+                let max_row = 0
+                ocr_data[record_ocr_index].data.map((data) => {
+                    if (data.row > 0) {
+                        if (max_row < data.row) {
+                            max_row = data.row
+                        }
+                        ocr_data_map[data.row + '' + data.col] = data.text
+                    }
+                })
+                for (var i = 1; i < max_row; i++) {
+                    if (index == 0) {
+                        let record = []
+                        record.push(ocr_data_map[i + '' + 0])
+                        record.push(ocr_data_map[i + '' + 1])
+                        record.push(ocr_data_map[i + '' + 2])
+                        record.push(ocr_data_map[i + '' + 3])
+                        records.push(record)
+                    } else {
+                        if (records[i - 1]) {
+                            let record = records[i - 1]
+                            record.push(ocr_data_map[i + '' + 3])
+                            records[i - 1] = record
+                        }
+                    }
+                }
+                header.header.push(ocr._doc.student_code)
+                ocr._doc.ocr_data_map = ocr_data_map
+                return ocr
+            })
+
+
+
+
+            const csvWriter = createCsvWriter(header);
+            csvWriter.writeRecords(records)       // returns a promise
+                .then(() => {
+                    res.download(path);
+                });
+            // let response = new Response(StatusCode.SUCCESS, records).getRsp()
+            // return res.status(response.http.status).json(response);
         })
     })
 
