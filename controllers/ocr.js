@@ -39,14 +39,14 @@ exports.downloadReport = function (req, res) {
         let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_MISSING_PARAMETERS, COMPONENT).getRspStatus()
         return res.status(apistatus.http.status).json(apistatus);
     }
-    let condition = { username: teacher,  exam_code: exam}
+    let condition = { username: teacher}
     BaseModel.findByCondition(User, condition, function (err, users) {
         if (err || !users) {
             let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_NOTFOUND, COMPONENT).getRspStatus()
             return res.status(apistatus.http.status).json(apistatus);
         }
         let user_obj = users[0]._doc
-        let ocr_condition = { teacher_code: user_obj.teacher_code }
+        let ocr_condition = { teacher_code: user_obj.teacher_code, exam_code: exam }
         if (date) {
             ocr_condition['exam_date'] = date
         }
