@@ -34,11 +34,12 @@ exports.fetchOcrs = function (req, res) {
 exports.downloadReport = function (req, res) {
     let date = req.query.date
     let teacher = req.query.teacher
-    if (!teacher) {
+    let exam = req.query.exam
+    if (!teacher || !exam) {
         let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_MISSING_PARAMETERS, COMPONENT).getRspStatus()
         return res.status(apistatus.http.status).json(apistatus);
     }
-    let condition = { username: teacher }
+    let condition = { username: teacher,  exam_code: exam}
     BaseModel.findByCondition(User, condition, function (err, users) {
         if (err || !users) {
             let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_NOTFOUND, COMPONENT).getRspStatus()
