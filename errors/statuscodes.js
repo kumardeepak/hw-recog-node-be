@@ -38,4 +38,6 @@ exports.StatusCode = {
     ERR_GLOBAL_EXAM_NOTFOUND: { ok: false, http: { status: 400 }, why: "requested exam doesn't exist" },
     ERR_GLOBAL_CLUSTER_NOTFOUND: { ok: false, http: { status: 400 }, why: "requested cluster doesn't exist" },
     ERR_ALREADY_PROCESSED: { ok: false, http: { status: 501 }, why: "requested data already processed" },
+    ERR_GLOBAL_CLASS_NOTFOUND: { ok: false, http: { status: 400 }, why: "requested class doesn't exist" },
+
 }

@@ -5,6 +5,7 @@ var Response = require('../models/response')
 var APIStatus = require('../errors/apistatus')
 var StatusCode = require('../errors/statuscodes').StatusCode
 var LOG = require('../logger/logger').logger
+var ClassDb = require('../models/class')
 
 var COMPONENT = "exam";
 const STATUS_ACTIVE = 'ACTIVE'
@@ -16,7 +17,7 @@ exports.fetchExams = function (req, res) {
     if (school) {
         condition['school_code'] = school
     }
-    if(exam_date){
+    if (exam_date) {
         condition['exam_date'] = exam_date
     }
     BaseModel.findByCondition(Exam, condition, function (err, exams) {
@@ -36,7 +37,7 @@ exports.updateExams = function (req, res) {
         return res.status(apistatus.http.status).json(apistatus);
     }
     let exam = req.body.exam
-    let exam_obj_update = {exam_code: exam.exam_code, exam_name: exam.exam_name, exam_date: exam.exam_date,statue: exam.status}
+    let exam_obj_update = { exam_code: exam.exam_code, exam_name: exam.exam_name, exam_date: exam.exam_date, statue: exam.status, class_code: exam.class_code }
     BaseModel.updateData(Exam, exam_obj_update, exam._id, function (err, doc) {
         if (err) {
             let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SYSTEM, COMPONENT).getRspStatus()
@@ -48,30 +49,38 @@ exports.updateExams = function (req, res) {
 }
 
 exports.saveExams = function (req, res) {
-    if (!req.body || !req.body.exam || !req.body.exam.exam_code || !req.body.exam.exam_name || !req.body.exam.school_code || !req.body.exam.exam_date) {
+    if (!req.body || !req.body.exam || !req.body.exam.exam_code || !req.body.exam.exam_name || !req.body.exam.school_code || !req.body.exam.exam_date || !req.body.exam.class_code) {
         let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_MISSING_PARAMETERS, COMPONENT).getRspStatus()
         return res.status(apistatus.http.status).json(apistatus);
     }
     let exam = req.body.exam
     BaseModel.findByCondition(School, { school_code: exam.school_code }, function (err, schools) {
-        if (err || !schools && schools.length == 0) {
+        if (err || !schools || schools.length == 0) {
             let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SCHOOL_NOTFOUND, COMPONENT).getRspStatus()
             return res.status(apistatus.http.status).json(apistatus);
         }
-        BaseModel.findByCondition(Exam, { exam_code: exam.exam_code, status: STATUS_ACTIVE }, function (err, examdb) {
-            if (examdb && examdb.length > 0) {
-                let apistatus = new APIStatus(StatusCode.ERR_DATA_EXIST, COMPONENT).getRspStatus()
+
+        BaseModel.findByCondition(ClassDb, { class_code: exam.class_code }, function (err, schools) {
+            if (err || !schools || schools.length == 0) {
+                let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_CLASS_NOTFOUND, COMPONENT).getRspStatus()
                 return res.status(apistatus.http.status).json(apistatus);
             }
-            exam.status = STATUS_ACTIVE
-            exam.created_on = new Date()
-            BaseModel.saveData(Exam, [exam], function (err, doc) {
-                if (err) {
-                    let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SYSTEM, COMPONENT).getRspStatus()
+
+            BaseModel.findByCondition(Exam, { exam_code: exam.exam_code, status: STATUS_ACTIVE }, function (err, examdb) {
+                if (examdb && examdb.length > 0) {
+                    let apistatus = new APIStatus(StatusCode.ERR_DATA_EXIST, COMPONENT).getRspStatus()
                     return res.status(apistatus.http.status).json(apistatus);
                 }
-                let response = new Response(StatusCode.SUCCESS, COMPONENT).getRsp()
-                return res.status(response.http.status).json(response);
+                exam.status = STATUS_ACTIVE
+                exam.created_on = new Date()
+                BaseModel.saveData(Exam, [exam], function (err, doc) {
+                    if (err) {
+                        let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SYSTEM, COMPONENT).getRspStatus()
+                        return res.status(apistatus.http.status).json(apistatus);
+                    }
+                    let response = new Response(StatusCode.SUCCESS, COMPONENT).getRsp()
+                    return res.status(response.http.status).json(response);
+                })
             })
         })
     })
