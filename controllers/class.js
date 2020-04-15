@@ -53,12 +53,7 @@ exports.saveClasses = function (req, res) {
     }
     let reqClass = req.body.class
 
-    BaseModel.findByCondition(School, { school_code: reqClass.school_code }, function (err, schools) {
-        if (err || !schools || schools.length == 0) {
-            let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SCHOOL_NOTFOUND, COMPONENT).getRspStatus()
-            return res.status(apistatus.http.status).json(apistatus);
-        }
-        BaseModel.findByCondition(ClassDB, { class_code: reqClass.class_code, status: STATUS_ACTIVE }, function (err, classdb) {
+        BaseModel.findByCondition(ClassDB, { class_code: reqClass.class_code, school_code: reqClass.school_code, status: STATUS_ACTIVE }, function (err, classdb) {
             if (classdb && classdb.length > 0) {
                 let apistatus = new APIStatus(StatusCode.ERR_DATA_EXIST, COMPONENT).getRspStatus()
                 return res.status(apistatus.http.status).json(apistatus);
@@ -74,5 +69,4 @@ exports.saveClasses = function (req, res) {
                 return res.status(response.http.status).json(response);
             })
         })
-    })
 }
