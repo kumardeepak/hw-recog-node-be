@@ -5,6 +5,10 @@ var School = require('../models/school');
 var Cluster = require('../models/cluster');
 var District = require('../models/district');
 var Block = require('../models/block');
+var ClassDB = require('../models/class');
+var Student = require('../models/student');
+var Exam = require('../models/exam');
+var Ocr = require('../models/ocr');
 var Response = require('../models/response')
 var APIStatus = require('../errors/apistatus')
 var StatusCode = require('../errors/statuscodes').StatusCode
@@ -108,32 +112,60 @@ exports.login = function (req, res) {
                         return res.status(apistatus.http.status).json(apistatus);
                     }
                     let teacher = teacherdb[0]._doc
-                    BaseModel.findByCondition(School, { school_code: teacher.school_code, status: STATUS_ACTIVE }, function (err, schooldb) {
-                        if (err || !schooldb || schooldb.length == 0) {
+                    BaseModel.findByCondition(ClassDB, { class_code: { "$in": teacher.class_code } }, function (err, classesdb) {
+                        if (err) {
                             let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_INVALID_CREDENTIALS, COMPONENT).getRspStatus()
                             return res.status(apistatus.http.status).json(apistatus);
                         }
-                        let school = schooldb[0]._doc
-                        BaseModel.findByCondition(Cluster, { cluster_code: school.cluster_code, status: STATUS_ACTIVE }, function (err, clusterdb) {
-                            if (err || !clusterdb || clusterdb.length == 0) {
+                        BaseModel.findByCondition(Student, { class_code: { "$in": teacher.class_code } }, function (err, studentdbs) {
+                            if (err) {
                                 let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_INVALID_CREDENTIALS, COMPONENT).getRspStatus()
                                 return res.status(apistatus.http.status).json(apistatus);
                             }
-                            let cluster = clusterdb[0]._doc
-                            BaseModel.findByCondition(Block, { block_code: cluster.block_code, status: STATUS_ACTIVE }, function (err, blockdb) {
-                                if (err || !blockdb || blockdb.length == 0) {
+                            BaseModel.findByCondition(Exam, { class_code: { "$in": teacher.class_code } }, function (err, examsdb) {
+                                if (err || !examsdb || examsdb.length == 0) {
                                     let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_INVALID_CREDENTIALS, COMPONENT).getRspStatus()
                                     return res.status(apistatus.http.status).json(apistatus);
                                 }
-                                let block = blockdb[0]._doc
-                                BaseModel.findByCondition(District, { district_code: block.district_code, status: STATUS_ACTIVE }, function (err, districtdb) {
-                                    if (err || !districtdb || districtdb.length == 0) {
+                                let exam_codes = []
+                                examsdb.map((exam) => {
+                                    exam_codes.push(exam._doc.exam_code)
+                                })
+                                BaseModel.findByCondition(Ocr, { exam_code: { "$in": exam_codes } }, function (err, ocrs) {
+                                    if (err || !ocrs || ocrs.length == 0) {
                                         let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_INVALID_CREDENTIALS, COMPONENT).getRspStatus()
                                         return res.status(apistatus.http.status).json(apistatus);
                                     }
-                                    let district = districtdb[0]._doc
-                                    let response = new Response(StatusCode.SUCCESS, { district, block, cluster, school, teacher }).getRsp()
-                                    return res.status(response.http.status).json(response);
+                                    BaseModel.findByCondition(School, { school_code: teacher.school_code, status: STATUS_ACTIVE }, function (err, schooldb) {
+                                        if (err || !schooldb || schooldb.length == 0) {
+                                            let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_INVALID_CREDENTIALS, COMPONENT).getRspStatus()
+                                            return res.status(apistatus.http.status).json(apistatus);
+                                        }
+                                        let school = schooldb[0]._doc
+                                        BaseModel.findByCondition(Cluster, { cluster_code: school.cluster_code, status: STATUS_ACTIVE }, function (err, clusterdb) {
+                                            if (err || !clusterdb || clusterdb.length == 0) {
+                                                let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_INVALID_CREDENTIALS, COMPONENT).getRspStatus()
+                                                return res.status(apistatus.http.status).json(apistatus);
+                                            }
+                                            let cluster = clusterdb[0]._doc
+                                            BaseModel.findByCondition(Block, { block_code: cluster.block_code, status: STATUS_ACTIVE }, function (err, blockdb) {
+                                                if (err || !blockdb || blockdb.length == 0) {
+                                                    let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_INVALID_CREDENTIALS, COMPONENT).getRspStatus()
+                                                    return res.status(apistatus.http.status).json(apistatus);
+                                                }
+                                                let block = blockdb[0]._doc
+                                                BaseModel.findByCondition(District, { district_code: block.district_code, status: STATUS_ACTIVE }, function (err, districtdb) {
+                                                    if (err || !districtdb || districtdb.length == 0) {
+                                                        let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_INVALID_CREDENTIALS, COMPONENT).getRspStatus()
+                                                        return res.status(apistatus.http.status).json(apistatus);
+                                                    }
+                                                    let district = districtdb[0]._doc
+                                                    let response = new Response(StatusCode.SUCCESS, { district, block, cluster, school, teacher, examsdb, studentdbs, ocrs, classesdb }).getRsp()
+                                                    return res.status(response.http.status).json(response);
+                                                })
+                                            })
+                                        })
+                                    })
                                 })
                             })
                         })
