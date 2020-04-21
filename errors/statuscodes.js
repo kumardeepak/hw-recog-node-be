@@ -39,5 +39,8 @@ exports.StatusCode = {
     ERR_GLOBAL_CLUSTER_NOTFOUND: { ok: false, http: { status: 400 }, why: "requested cluster doesn't exist" },
     ERR_ALREADY_PROCESSED: { ok: false, http: { status: 501 }, why: "requested data already processed" },
     ERR_GLOBAL_CLASS_NOTFOUND: { ok: false, http: { status: 400 }, why: "requested class doesn't exist" },
+    ERR_GLOBAL_TEACHER_NOTFOUND: { ok: false, http: { status: 400 }, why: "requested teacher doesn't exist" },
+    ERR_GLOBAL_STUDENT_NOTFOUND: { ok: false, http: { status: 400 }, why: "requested student doesn't exist" },
+
 
 }

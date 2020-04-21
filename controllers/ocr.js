@@ -9,6 +9,8 @@ var APIStatus = require('../errors/apistatus')
 var StatusCode = require('../errors/statuscodes').StatusCode
 const createCsvWriter = require('csv-writer').createArrayCsvWriter;
 var LOG = require('../logger/logger').logger
+var Teacher = require('../models/teacher');
+var async = require('async');
 
 var COMPONENT = "ocr";
 const STATUS_ACTIVE = 'ACTIVE'
@@ -39,7 +41,7 @@ exports.downloadReport = function (req, res) {
         let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_MISSING_PARAMETERS, COMPONENT).getRspStatus()
         return res.status(apistatus.http.status).json(apistatus);
     }
-    let condition = { username: teacher}
+    let condition = { username: teacher }
     BaseModel.findByCondition(User, condition, function (err, users) {
         if (err || !users) {
             let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_NOTFOUND, COMPONENT).getRspStatus()
@@ -57,7 +59,7 @@ exports.downloadReport = function (req, res) {
                 let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_NOTFOUND, COMPONENT).getRspStatus()
                 return res.status(apistatus.http.status).json(apistatus);
             }
-            
+
             let header = {
                 header: ['Sr.No.', 'Code', 'MaxMarks'],
                 path: path
@@ -97,7 +99,7 @@ exports.downloadReport = function (req, res) {
                         }
                     }
                 }
-                header.header.push('Marks Obtained By '+ocr._doc.student_code)
+                header.header.push('Marks Obtained By ' + ocr._doc.student_code)
                 ocr._doc.ocr_data_map = ocr_data_map
                 return ocr
             })
@@ -206,18 +208,109 @@ exports.saveOcrs = function (req, res) {
 }
 
 exports.saveOcrData = function (req, res) {
-    if (!req.body || !req.body.exam_date || !req.body.exam_code || !req.body.student_code || !req.body.teacher_code || !req.body.ocr_data) {
+    if (!req.body || !req.body.ocr || !Array.isArray(req.body.ocr) || req.body.ocr.length <= 0) {
         let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_MISSING_PARAMETERS, COMPONENT).getRspStatus()
         return res.status(apistatus.http.status).json(apistatus);
     }
-    let ocr = req.body
-    ocr.created_on = new Date()
-    BaseModel.saveData(OcrData, [ocr], function (err, doc) {
-        if (err) {
-            let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SYSTEM, COMPONENT).getRspStatus()
-            return res.status(apistatus.http.status).json(apistatus);
+
+    let ocrArr = []
+    async.each(req.body.ocr, function (ocrReq, callback) {
+        if(ocrReq && ocrReq.teacher_code && ocrReq.student_code && ocrReq.exam_code) {
+            BaseModel.findByCondition(Teacher, { teacher_code: ocrReq.teacher_code, status: STATUS_ACTIVE }, function (err, teacherdb) {
+                if (!teacherdb || teacherdb.length <= 0) {
+                    LOG.debug(ocrReq.teacher_code, " teacher code is missing")
+                    callback()
+                } else {
+                    BaseModel.findByCondition(Student, { student_code: ocrReq.student_code, status: STATUS_ACTIVE }, function (err, studentdb) {
+                        if (!studentdb || studentdb.length <= 0) {
+                            LOG.debug(ocrReq.student_code, " student code is missing")
+                            callback()
+    
+                        } else {
+                            BaseModel.findByCondition(Exam, { exam_code: ocrReq.exam_code, status: STATUS_ACTIVE }, function (err, examdb) {
+                                if (!examdb || examdb.length == 0) {
+                                    LOG.debug(ocrReq.student_code, " exam code is missing")
+                                    callback()
+                                }
+    
+                                let ocr = ocrReq
+                                ocr.created_on = new Date()
+                                ocrArr.push(ocr)
+                                callback()
+                            })
+                        }
+    
+                    })
+                }
+    
+            })
+        } else {
+            callback()
         }
-        let response = new Response(StatusCode.SUCCESS, COMPONENT).getRsp()
-        return res.status(response.http.status).json(response);
-    })
+    },
+        function (err) {
+            if (err) {
+                LOG.error(err)
+                let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SYSTEM, COMPONENT).getRspStatus()
+                return res.status(apistatus.http.status).json(apistatus);
+            } else {
+                let createOcr = []
+                let updateOcr = []
+
+                async.each(ocrArr, function (ocrs, callback) {
+                    let condition = {}
+
+                    if (ocrs.student_code) {
+                        condition['student_code'] = ocrs.student_code
+                    }
+                    if (ocrs.exam_code) {
+                        condition['exam_code'] = ocrs.exam_code
+                    }
+                    BaseModel.findByCondition(OcrData, condition, function (err, existingOcrs) {
+                        if (err) {
+                            let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SYSTEM, COMPONENT).getRspStatus()
+                            return res.status(apistatus.http.status).json(apistatus);
+                        } else if (existingOcrs && existingOcrs && Array.isArray(existingOcrs) && existingOcrs.length > 0) {
+                            ocrs._id = existingOcrs[0]._doc._id
+                            updateOcr.push(ocrs)
+                            let ocr_obj_update = { exam_date: ocrs.exam_date, teacher_code: ocrs.teacher_code, ocr_data: ocrs.ocr_data }
+
+                            BaseModel.updateData(OcrData, ocr_obj_update, existingOcrs[0]._id, function (updateErr, doc) {
+                                if (updateErr) {
+                                    let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SYSTEM, COMPONENT).getRspStatus()
+                                    return res.status(apistatus.http.status).json(apistatus);
+                                }
+                                callback()
+
+                            })
+
+                        } else {
+                            createOcr.push(ocrs)
+                            callback()
+
+                        }
+
+                    })
+
+                }, function (error) {
+                    if (error) {
+                        LOG.error(error)
+                        let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SYSTEM, COMPONENT).getRspStatus()
+                        return res.status(apistatus.http.status).json(apistatus);
+                    }
+                    BaseModel.saveData(OcrData, createOcr, function (err1, doc) {
+                        if (err1) {
+                            let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SYSTEM, COMPONENT).getRspStatus()
+                            return res.status(apistatus.http.status).json(apistatus);
+                        }
+                        processedRec = updateOcr.length + createOcr.length
+                        let response = new Response(StatusCode.SUCCESS, processedRec + " ocr's are processed").getRsp()
+                        return res.status(response.http.status).json(response);
+                    })
+
+                })
+            }
+
+        })
+
 }

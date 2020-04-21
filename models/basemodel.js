@@ -4,25 +4,30 @@ var mongoose = require("../db/mongoose");
 var Basemodel = {}
 
 Basemodel.saveData = function (schema, data, cb) {
-    schema.collection.insertMany(data, function (err, docs) {
-        if (err) {
-            return cb(err, null);
-        } else {
-            LOG.debug('%s data was successfully stored.', JSON.stringify(docs));
-            return cb(null, docs);
-        }
-    })
+    if(data && data.length > 0) {
+        schema.collection.insertMany(data, function (err, docs) {
+            if (err) {
+                return cb(err, null);
+            } else {
+                LOG.debug('%s data was successfully stored.', JSON.stringify(docs));
+                return cb(null, docs);
+            }
+        })
+    } else {
+        return cb(null, []);
+    }
+   
 }
 
 Basemodel.updateData = function (schema, data, id, cb) {
-    schema.collection.findOneAndUpdate({ _id: mongoose.Types.ObjectId(id) }, { $set: data }, { upsert: false }, function (err, doc) {
-        if (err) {
-            LOG.error(err)
-            cb(err, null)
-        }
-        LOG.debug(doc)
-        cb(null, doc)
-    });
+        schema.collection.findOneAndUpdate({ _id: mongoose.Types.ObjectId(id) }, { $set: data }, { upsert: false }, function (err, doc) {
+            if (err) {
+                LOG.error(err)
+                cb(err, null)
+            }
+            LOG.debug(doc)
+            cb(null, doc)
+        });
 }
 
 Basemodel.findByCondition = function (schema, condition, cb) {
