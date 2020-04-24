@@ -215,34 +215,17 @@ exports.saveOcrData = function (req, res) {
 
     let ocrArr = []
     async.each(req.body.ocr, function (ocrReq, callback) {
-        if(ocrReq && ocrReq.teacher_code && ocrReq.student_code && ocrReq.exam_code) {
-            BaseModel.findByCondition(Teacher, { teacher_code: ocrReq.teacher_code, status: STATUS_ACTIVE }, function (err, teacherdb) {
-                if (!teacherdb || teacherdb.length <= 0) {
-                    LOG.debug(ocrReq.teacher_code, " teacher code is missing")
+        if (ocrReq && ocrReq.exam_code && ocrReq.examid_uuid && ocrReq.ocr_data) {
+            BaseModel.findByCondition(Exam, { exam_code: ocrReq.exam_code, status: STATUS_ACTIVE }, function (err, examdb) {
+                if (!examdb || examdb.length == 0) {
+                    LOG.debug(ocrReq.student_code, " exam code is missing")
                     callback()
-                } else {
-                    BaseModel.findByCondition(Student, { student_code: ocrReq.student_code, status: STATUS_ACTIVE }, function (err, studentdb) {
-                        if (!studentdb || studentdb.length <= 0) {
-                            LOG.debug(ocrReq.student_code, " student code is missing")
-                            callback()
-    
-                        } else {
-                            BaseModel.findByCondition(Exam, { exam_code: ocrReq.exam_code, status: STATUS_ACTIVE }, function (err, examdb) {
-                                if (!examdb || examdb.length == 0) {
-                                    LOG.debug(ocrReq.student_code, " exam code is missing")
-                                    callback()
-                                }
-    
-                                let ocr = ocrReq
-                                ocr.created_on = new Date()
-                                ocrArr.push(ocr)
-                                callback()
-                            })
-                        }
-    
-                    })
                 }
-    
+
+                let ocr = ocrReq
+                ocr.created_on = new Date()
+                ocrArr.push(ocr)
+                callback()
             })
         } else {
             callback()
@@ -260,20 +243,21 @@ exports.saveOcrData = function (req, res) {
                 async.each(ocrArr, function (ocrs, callback) {
                     let condition = {}
 
-                    if (ocrs.student_code) {
-                        condition['student_code'] = ocrs.student_code
+                    if (ocrs.examid_uuid) {
+                        condition['examid_uuid'] = ocrs.examid_uuid
                     }
                     if (ocrs.exam_code) {
                         condition['exam_code'] = ocrs.exam_code
                     }
+
                     BaseModel.findByCondition(OcrData, condition, function (err, existingOcrs) {
                         if (err) {
                             let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SYSTEM, COMPONENT).getRspStatus()
                             return res.status(apistatus.http.status).json(apistatus);
-                        } else if (existingOcrs && existingOcrs && Array.isArray(existingOcrs) && existingOcrs.length > 0) {
+                        } else if (existingOcrs && Array.isArray(existingOcrs) && existingOcrs.length > 0) {
                             ocrs._id = existingOcrs[0]._doc._id
                             updateOcr.push(ocrs)
-                            let ocr_obj_update = { exam_date: ocrs.exam_date, teacher_code: ocrs.teacher_code, ocr_data: ocrs.ocr_data }
+                            let ocr_obj_update = { exam_date: ocrs.exam_date, teacher_code: ocrs.teacher_code, ocr_data: ocrs.ocr_data, class_code: ocrs.class_code }
 
                             BaseModel.updateData(OcrData, ocr_obj_update, existingOcrs[0]._id, function (updateErr, doc) {
                                 if (updateErr) {
