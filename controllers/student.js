@@ -57,27 +57,30 @@ exports.saveStudents = function (req, res) {
         }
 
         BaseModel.findByCondition(ClassDb, { class_code: student.class_code }, function (err, classes) {
-            if (err || !classes || classes.length == 0 ) {
+            if (err || !classes || classes.length == 0) {
                 console.log(err)
                 let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_CLASS_NOTFOUND, COMPONENT).getRspStatus()
                 return res.status(apistatus.http.status).json(apistatus);
-            } 
-                // BaseModel.findByCondition(Student, { student_code: student.student_code, status: STATUS_ACTIVE }, function (err, studentdb) {
-                    // if (studentdb && studentdb.length > 0) {
-                    //     let apistatus = new APIStatus(StatusCode.ERR_DATA_EXIST, COMPONENT).getRspStatus()
-                    //     return res.status(apistatus.http.status).json(apistatus);
-                    // }
-                    student.status = STATUS_ACTIVE
-                    student.created_on = new Date()
-                    BaseModel.saveData(Student, [student], function (err, doc) {
-                        if (err) {
-                            let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SYSTEM, COMPONENT).getRspStatus()
-                            return res.status(apistatus.http.status).json(apistatus);
-                        }
-                        let response = new Response(StatusCode.SUCCESS, COMPONENT).getRsp()
-                        return res.status(response.http.status).json(response);
-                    })
-                // })
+            }
+            // BaseModel.findByCondition(Student, { student_code: student.student_code, status: STATUS_ACTIVE }, function (err, studentdb) {
+            // if (studentdb && studentdb.length > 0) {
+            //     let apistatus = new APIStatus(StatusCode.ERR_DATA_EXIST, COMPONENT).getRspStatus()
+            //     return res.status(apistatus.http.status).json(apistatus);
+            // }
+            LOG.info('----------Inserting Student---------------')
+            student.status = STATUS_ACTIVE
+            student.created_on = new Date()
+            BaseModel.saveData(Student, [student], function (err, doc) {
+                if (err) {
+                    let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_SYSTEM, COMPONENT).getRspStatus()
+                    return res.status(apistatus.http.status).json(apistatus);
+                }
+                LOG.info('----------Inserted Student---------------')
+
+                let response = new Response(StatusCode.SUCCESS, COMPONENT).getRsp()
+                return res.status(response.http.status).json(response);
+            })
+            // })
         })
 
     })
