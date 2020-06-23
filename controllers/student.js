@@ -62,11 +62,11 @@ exports.saveStudents = function (req, res) {
                 let apistatus = new APIStatus(StatusCode.ERR_GLOBAL_CLASS_NOTFOUND, COMPONENT).getRspStatus()
                 return res.status(apistatus.http.status).json(apistatus);
             } 
-                BaseModel.findByCondition(Student, { student_code: student.student_code, status: STATUS_ACTIVE }, function (err, studentdb) {
-                    if (studentdb && studentdb.length > 0) {
-                        let apistatus = new APIStatus(StatusCode.ERR_DATA_EXIST, COMPONENT).getRspStatus()
-                        return res.status(apistatus.http.status).json(apistatus);
-                    }
+                // BaseModel.findByCondition(Student, { student_code: student.student_code, status: STATUS_ACTIVE }, function (err, studentdb) {
+                    // if (studentdb && studentdb.length > 0) {
+                    //     let apistatus = new APIStatus(StatusCode.ERR_DATA_EXIST, COMPONENT).getRspStatus()
+                    //     return res.status(apistatus.http.status).json(apistatus);
+                    // }
                     student.status = STATUS_ACTIVE
                     student.created_on = new Date()
                     BaseModel.saveData(Student, [student], function (err, doc) {
@@ -77,7 +77,7 @@ exports.saveStudents = function (req, res) {
                         let response = new Response(StatusCode.SUCCESS, COMPONENT).getRsp()
                         return res.status(response.http.status).json(response);
                     })
-                })
+                // })
         })
 
     })
